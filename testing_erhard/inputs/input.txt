@@ -1,0 +1,14 @@
+Snapshot directory:
+testing_erhard/snapshots_aligned
+Template PDB:
+template.pdb
+Receptor PDB:
+receptor.pdb
+Ligand PDB:
+3ube_ligand.pdb
+Target Residues:
+?_489
+?_493
+?_497
+?_501
+END
