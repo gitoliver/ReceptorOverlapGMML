@@ -207,6 +207,8 @@ int main(int argc, char *argv[])
             gmml::Superimpose(receptors_ligand_coordinates, target_atoms_coordinates, receptorCoordinates);
             std::cout << GeometryTopology::calculateDistanceFromPointToLineBetweenTwoPoints(target_residue_C1_atom->GetCoordinates().at(i), receptorDisectingLinepoint1, receptorDisectingLinepoint2) << ", " << std::flush;
             //std::cout << "..";
+
+            // WRITE OUT PDB FILES EVERY STEP
 //            std::stringstream ss, ss1;
 //           // ss << workingDirectory << "/receptor_" << i << "_" << aglycone->GetNumber() << ".pdb";
 //            ss << workingDirectory << "/receptor_" << i << "_" << converted_residue_number << ".pdb";
@@ -215,6 +217,8 @@ int main(int argc, char *argv[])
 //            ss1 << workingDirectory << "/ligand_" << i << "_" << converted_residue_number << ".pdb";
 //            PdbFileSpace::PdbFile *outputPdbFile1 = receptors_ligand.BuildPdbFileStructureFromAssembly(-1, 0);
 //            outputPdbFile1->Write(ss1.str());
+            // END OF WRITE OUT PDB FILES EVERY STEP
+
             //std::cout << gmml::CalculateAtomicOverlaps(receptor.GetAllAtomsOfAssembly(), assembly_of_pdbs.GetAllAtomsOfAssembly()) << ", " << std::flush;
             overlap = beads::Calculate_bead_overlaps(receptorBeads, proteinBeads);
             std::cout << overlap << ", " << "\n";
