@@ -3,9 +3,13 @@ testing_erhard/snapshots_aligned
 Template PDB:
 template.pdb
 Receptor PDB:
-receptor.pdb
+receptor.pdb.bak.3UBE
 Ligand PDB:
 3ube_ligand.pdb
+Receptor Vector Residue Numbers:
+998
+999
+END
 Target Residues:
 ?_489
 ?_493
