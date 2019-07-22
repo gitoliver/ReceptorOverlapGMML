@@ -203,6 +203,7 @@ int main(int argc, char *argv[])
 
     // For each target residue, go through each coordinate set (each snapshot) and get the coordinates of each atom.
     // Then, superimpose the ligand atoms to each snapshot with receptor and calculate overlap.
+    bool reverse_strep_angle = false; // This is dumb, but reverse the angle every second residue? Real bad, not sure how else to do it.
     double overlap = 0.0;
     for(auto &target_residue : target_residues)
     {
@@ -274,23 +275,31 @@ int main(int argc, char *argv[])
                 Eigen::Vector3d receptorVector3D(receptorVector3DAtom2->GetCoordinate()->GetX() - receptorVector3DAtom1->GetCoordinate()->GetX(),
                                                  receptorVector3DAtom2->GetCoordinate()->GetY() - receptorVector3DAtom1->GetCoordinate()->GetY(),
                                                  receptorVector3DAtom2->GetCoordinate()->GetZ() - receptorVector3DAtom1->GetCoordinate()->GetZ());
-               // if()
-                std::cout << GetAngleBetweenVectors(strepVector3D, receptorVector3D) << "<- Angle, " << i << "<- i\n";
+                if(reverse_strep_angle)
+                {
+                    std::cout << GetAngleBetweenVectors(strepVector3DReversed, receptorVector3D) << "<- RAngle, " << i << "<- i\n";
+                }
+                else
+                {
+                    std::cout << GetAngleBetweenVectors(strepVector3D, receptorVector3D) << "<- Angle, " << i << "<- i\n";
+                }
 
-              //  std::cout << GetAngleBetweenVectors(strepVector3DReversed, receptorVector3D) << "<- Angle, " << i << "<- i\n";
 
                 // Print out ATOM cards for testing in VMD
                 std::cout << std::fixed << std::setprecision(3);
                 std::cout << "ATOM      1 CA1  HA1     1    " << std::setw(8) << receptorVector3DAtom1->GetCoordinate()->GetX() << std::setw(8) << receptorVector3DAtom1->GetCoordinate()->GetY() << std::setw(8) << receptorVector3DAtom1->GetCoordinate()->GetZ() << "\n";
                 std::cout << "ATOM      2 CA2  HA2     2    " << std::setw(8) << receptorVector3DAtom2->GetCoordinate()->GetX() << std::setw(8) << receptorVector3DAtom2->GetCoordinate()->GetY() << std::setw(8) << receptorVector3DAtom2->GetCoordinate()->GetZ() << "\n";
                 std::cout << "ATOM      3 ST1  ST1     3    " << std::setw(8) << streptavidinDisectingLinepoint1.GetX() << std::setw(8) << streptavidinDisectingLinepoint1.GetY() << std::setw(8) << streptavidinDisectingLinepoint1.GetZ() << "\n";
-                std::cout << "ATOM      4 ST2  ST2     4    " << std::setw(8) << streptavidinDisectingLinepoint2.GetX() << std::setw(8) << streptavidinDisectingLinepoint2.GetY() << std::setw(8) << streptavidinDisectingLinepoint2.GetZ() << "\n";            }
+                std::cout << "ATOM      4 ST2  ST2     4    " << std::setw(8) << streptavidinDisectingLinepoint2.GetX() << std::setw(8) << streptavidinDisectingLinepoint2.GetY() << std::setw(8) << streptavidinDisectingLinepoint2.GetZ() << "\n";
+
+            }
         }
+        reverse_strep_angle = !reverse_strep_angle; // Flips the bool from true to false for every target residue.
         std::cout << "\n";
     }
 
     //for(CoordinateVector::iterator it1 = )
-
+    std::cout << "\n\nHEY OLY! Did you ensure that the Strep residues alternate from one side to the other? Cause you reversed the vector each time so that the angles would be the same. Don't forget that you derp.\n\n";
     return 0;
 }
 
