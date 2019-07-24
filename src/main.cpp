@@ -75,6 +75,8 @@ int main(int argc, char *argv[])
 
     GeometryTopology::Coordinate streptavidinDisectingLinepoint2(40.1895, 21.084, 7.041);
     GeometryTopology::Coordinate streptavidinDisectingLinepoint1(6.096, 21.8635, -6.911);
+    GeometryTopology::Coordinate streptavidinCenterPoint(23.143, 21.474, 0.065);
+
     GeometryTopology::Coordinate jola(1.0, -15.0, 1.0); // This is just me checking that this next function works
 
     // Now for the angle between strep and HA, need a vector for the step line and can calculate now as it is fixed.
@@ -260,30 +262,31 @@ int main(int argc, char *argv[])
 
             //std::cout << gmml::CalculateAtomicOverlaps(receptor.GetAllAtomsOfAssembly(), assembly_of_pdbs.GetAllAtomsOfAssembly()) << ", " << std::flush;
             overlap = beads::Calculate_bead_overlaps(receptorBeads, proteinBeads);
+            std::cout << std::fixed << std::setprecision(3);
             std::cout << "Overlap: " << overlap << ", ";
             //std::cout << "." << std::flush;
-                if(isReceptorVectorResidueList)
-                {
-                    double angle;
-                    Eigen::Vector3d receptorVector3D(receptorVector3DAtom2->GetCoordinate()->GetX() - receptorVector3DAtom1->GetCoordinate()->GetX(),
-                                                     receptorVector3DAtom2->GetCoordinate()->GetY() - receptorVector3DAtom1->GetCoordinate()->GetY(),
-                                                     receptorVector3DAtom2->GetCoordinate()->GetZ() - receptorVector3DAtom1->GetCoordinate()->GetZ());
-                    if(reverse_strep_angle)
-                        angle = GetAngleBetweenVectors(strepVector3DReversed, receptorVector3D);  
-                    else
-                        angle = GetAngleBetweenVectors(strepVector3D, receptorVector3D);
+            if(isReceptorVectorResidueList)
+            {
+                double angle;
+                Eigen::Vector3d receptorVector3D(receptorVector3DAtom2->GetCoordinate()->GetX() - receptorVector3DAtom1->GetCoordinate()->GetX(),
+                                                 receptorVector3DAtom2->GetCoordinate()->GetY() - receptorVector3DAtom1->GetCoordinate()->GetY(),
+                                                 receptorVector3DAtom2->GetCoordinate()->GetZ() - receptorVector3DAtom1->GetCoordinate()->GetZ());
+                if(reverse_strep_angle)
+                    angle = GetAngleBetweenVectors(strepVector3DReversed, receptorVector3D);
+                else
+                    angle = GetAngleBetweenVectors(strepVector3D, receptorVector3D);
 
-                        // CALCULATE DISTANCE
-                        std::cout << "Angle: " << angle << ", ";
-                        std::cout << "Distance: " << GeometryTopology::calculateDistanceFromPointToLineBetweenTwoPoints(target_residue_C1_atom->GetCoordinates().at(i), streptavidinDisectingLinepoint1, streptavidinDisectingLinepoint2) << std::endl;
+                // CALCULATE DISTANCE
+                std::cout << "Angle: " << angle << ", ";
+                std::cout << "GlycanToStrepMidlineDistance: " << GeometryTopology::calculateDistanceFromPointToLineBetweenTwoPoints(target_residue_C1_atom->GetCoordinates().at(i), streptavidinDisectingLinepoint1, streptavidinDisectingLinepoint2) << ", ";
+                std::cout << "InterStrepDistance: " << receptorVector3DAtom2->GetDistanceToCoordinate(&streptavidinCenterPoint) << std::endl;
 
-                    // Print out ATOM cards for testing in VMD
-//                    std::cout << std::fixed << std::setprecision(3);
-//                    std::cout << "ATOM      1 CA1  HA1     1    " << std::setw(8) << receptorVector3DAtom1->GetCoordinate()->GetX() << std::setw(8) << receptorVector3DAtom1->GetCoordinate()->GetY() << std::setw(8) << receptorVector3DAtom1->GetCoordinate()->GetZ() << "\n";
-//                    std::cout << "ATOM      2 CA2  HA2     2    " << std::setw(8) << receptorVector3DAtom2->GetCoordinate()->GetX() << std::setw(8) << receptorVector3DAtom2->GetCoordinate()->GetY() << std::setw(8) << receptorVector3DAtom2->GetCoordinate()->GetZ() << "\n";
-//                    std::cout << "ATOM      3 ST1  ST1     3    " << std::setw(8) << streptavidinDisectingLinepoint1.GetX() << std::setw(8) << streptavidinDisectingLinepoint1.GetY() << std::setw(8) << streptavidinDisectingLinepoint1.GetZ() << "\n";
-//                    std::cout << "ATOM      4 ST2  ST2     4    " << std::setw(8) << streptavidinDisectingLinepoint2.GetX() << std::setw(8) << streptavidinDisectingLinepoint2.GetY() << std::setw(8) << streptavidinDisectingLinepoint2.GetZ() << "\n";
-
+                // Print out ATOM cards for testing in VMD
+                std::cout << std::fixed << std::setprecision(3);
+                std::cout << "ATOM      1 CA1  HA1     1    " << std::setw(8) << receptorVector3DAtom1->GetCoordinate()->GetX() << std::setw(8) << receptorVector3DAtom1->GetCoordinate()->GetY() << std::setw(8) << receptorVector3DAtom1->GetCoordinate()->GetZ() << "\n";
+                std::cout << "ATOM      2 CA2  HA2     2    " << std::setw(8) << receptorVector3DAtom2->GetCoordinate()->GetX() << std::setw(8) << receptorVector3DAtom2->GetCoordinate()->GetY() << std::setw(8) << receptorVector3DAtom2->GetCoordinate()->GetZ() << "\n";
+                std::cout << "ATOM      3 ST1  ST1     3    " << std::setw(8) << streptavidinDisectingLinepoint1.GetX() << std::setw(8) << streptavidinDisectingLinepoint1.GetY() << std::setw(8) << streptavidinDisectingLinepoint1.GetZ() << "\n";
+                std::cout << "ATOM      4 ST2  ST2     4    " << std::setw(8) << streptavidinDisectingLinepoint2.GetX() << std::setw(8) << streptavidinDisectingLinepoint2.GetY() << std::setw(8) << streptavidinDisectingLinepoint2.GetZ() << "\n";
             }
         }
         reverse_strep_angle = !reverse_strep_angle; // Flips the bool from true to false for every target residue.
