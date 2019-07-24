@@ -245,52 +245,44 @@ int main(int argc, char *argv[])
             //std::cout << ".";
             //std::cout << receptors_ligand_coordinates.size() << "vs" << target_atoms_coordinates.size() << std::endl;
             gmml::Superimpose(receptors_ligand_coordinates, target_atoms_coordinates, receptorCoordinates);
-            std::cout << GeometryTopology::calculateDistanceFromPointToLineBetweenTwoPoints(target_residue_C1_atom->GetCoordinates().at(i), streptavidinDisectingLinepoint1, streptavidinDisectingLinepoint2) << ", " << std::flush;
             //std::cout << "..";
 
-            // WRITE OUT PDB FILES EVERY STEP
-            std::stringstream ss, ss1;
-           // ss << workingDirectory << "/receptor_" << i << "_" << aglycone->GetNumber() << ".pdb";
-            ss << workingDirectory << "/receptor_" << i << "_" << converted_residue_number << ".pdb";
-            PdbFileSpace::PdbFile *outputPdbFile = receptor.BuildPdbFileStructureFromAssembly(-1,0);
-            outputPdbFile->Write(ss.str());
-            ss1 << workingDirectory << "/ligand_" << i << "_" << converted_residue_number << ".pdb";
-            PdbFileSpace::PdbFile *outputPdbFile1 = receptors_ligand.BuildPdbFileStructureFromAssembly(-1, 0);
-            outputPdbFile1->Write(ss1.str());
+//            // WRITE OUT PDB FILES EVERY STEP
+//            std::stringstream ss, ss1;
+//           // ss << workingDirectory << "/receptor_" << i << "_" << aglycone->GetNumber() << ".pdb";
+//            ss << workingDirectory << "/receptor_" << i << "_" << converted_residue_number << ".pdb";
+//            PdbFileSpace::PdbFile *outputPdbFile = receptor.BuildPdbFileStructureFromAssembly(-1,0);
+//            outputPdbFile->Write(ss.str());
+//            ss1 << workingDirectory << "/ligand_" << i << "_" << converted_residue_number << ".pdb";
+//            PdbFileSpace::PdbFile *outputPdbFile1 = receptors_ligand.BuildPdbFileStructureFromAssembly(-1, 0);
+//            outputPdbFile1->Write(ss1.str());
             // END OF WRITE OUT PDB FILES EVERY STEP
 
             //std::cout << gmml::CalculateAtomicOverlaps(receptor.GetAllAtomsOfAssembly(), assembly_of_pdbs.GetAllAtomsOfAssembly()) << ", " << std::flush;
             overlap = beads::Calculate_bead_overlaps(receptorBeads, proteinBeads);
-            std::cout << overlap << ", ";
-//            if (overlap <= 0.5)
-//            {
-//                // Get shapes with good HA orientation
-//                // Calculate strep intersection line
-//                //
-//                // Calculate minimum distance from point to line
-//                //GeometryTopology::calculateDistanceFromPointToLineBetweenTwoPoints(queryPoint, linePointA, linePointB);
-//            }
-            if(isReceptorVectorResidueList)
-            {
-                Eigen::Vector3d receptorVector3D(receptorVector3DAtom2->GetCoordinate()->GetX() - receptorVector3DAtom1->GetCoordinate()->GetX(),
-                                                 receptorVector3DAtom2->GetCoordinate()->GetY() - receptorVector3DAtom1->GetCoordinate()->GetY(),
-                                                 receptorVector3DAtom2->GetCoordinate()->GetZ() - receptorVector3DAtom1->GetCoordinate()->GetZ());
-                if(reverse_strep_angle)
+            std::cout << "Overlap: " << overlap << ", ";
+            //std::cout << "." << std::flush;
+                if(isReceptorVectorResidueList)
                 {
-                    std::cout << GetAngleBetweenVectors(strepVector3DReversed, receptorVector3D) << "<- RAngle, " << i << "<- i\n";
-                }
-                else
-                {
-                    std::cout << GetAngleBetweenVectors(strepVector3D, receptorVector3D) << "<- Angle, " << i << "<- i\n";
-                }
+                    double angle;
+                    Eigen::Vector3d receptorVector3D(receptorVector3DAtom2->GetCoordinate()->GetX() - receptorVector3DAtom1->GetCoordinate()->GetX(),
+                                                     receptorVector3DAtom2->GetCoordinate()->GetY() - receptorVector3DAtom1->GetCoordinate()->GetY(),
+                                                     receptorVector3DAtom2->GetCoordinate()->GetZ() - receptorVector3DAtom1->GetCoordinate()->GetZ());
+                    if(reverse_strep_angle)
+                        angle = GetAngleBetweenVectors(strepVector3DReversed, receptorVector3D);  
+                    else
+                        angle = GetAngleBetweenVectors(strepVector3D, receptorVector3D);
 
+                        // CALCULATE DISTANCE
+                        std::cout << "Angle: " << angle << ", ";
+                        std::cout << "Distance: " << GeometryTopology::calculateDistanceFromPointToLineBetweenTwoPoints(target_residue_C1_atom->GetCoordinates().at(i), streptavidinDisectingLinepoint1, streptavidinDisectingLinepoint2) << std::endl;
 
-                // Print out ATOM cards for testing in VMD
-                std::cout << std::fixed << std::setprecision(3);
-                std::cout << "ATOM      1 CA1  HA1     1    " << std::setw(8) << receptorVector3DAtom1->GetCoordinate()->GetX() << std::setw(8) << receptorVector3DAtom1->GetCoordinate()->GetY() << std::setw(8) << receptorVector3DAtom1->GetCoordinate()->GetZ() << "\n";
-                std::cout << "ATOM      2 CA2  HA2     2    " << std::setw(8) << receptorVector3DAtom2->GetCoordinate()->GetX() << std::setw(8) << receptorVector3DAtom2->GetCoordinate()->GetY() << std::setw(8) << receptorVector3DAtom2->GetCoordinate()->GetZ() << "\n";
-                std::cout << "ATOM      3 ST1  ST1     3    " << std::setw(8) << streptavidinDisectingLinepoint1.GetX() << std::setw(8) << streptavidinDisectingLinepoint1.GetY() << std::setw(8) << streptavidinDisectingLinepoint1.GetZ() << "\n";
-                std::cout << "ATOM      4 ST2  ST2     4    " << std::setw(8) << streptavidinDisectingLinepoint2.GetX() << std::setw(8) << streptavidinDisectingLinepoint2.GetY() << std::setw(8) << streptavidinDisectingLinepoint2.GetZ() << "\n";
+                    // Print out ATOM cards for testing in VMD
+//                    std::cout << std::fixed << std::setprecision(3);
+//                    std::cout << "ATOM      1 CA1  HA1     1    " << std::setw(8) << receptorVector3DAtom1->GetCoordinate()->GetX() << std::setw(8) << receptorVector3DAtom1->GetCoordinate()->GetY() << std::setw(8) << receptorVector3DAtom1->GetCoordinate()->GetZ() << "\n";
+//                    std::cout << "ATOM      2 CA2  HA2     2    " << std::setw(8) << receptorVector3DAtom2->GetCoordinate()->GetX() << std::setw(8) << receptorVector3DAtom2->GetCoordinate()->GetY() << std::setw(8) << receptorVector3DAtom2->GetCoordinate()->GetZ() << "\n";
+//                    std::cout << "ATOM      3 ST1  ST1     3    " << std::setw(8) << streptavidinDisectingLinepoint1.GetX() << std::setw(8) << streptavidinDisectingLinepoint1.GetY() << std::setw(8) << streptavidinDisectingLinepoint1.GetZ() << "\n";
+//                    std::cout << "ATOM      4 ST2  ST2     4    " << std::setw(8) << streptavidinDisectingLinepoint2.GetX() << std::setw(8) << streptavidinDisectingLinepoint2.GetY() << std::setw(8) << streptavidinDisectingLinepoint2.GetZ() << "\n";
 
             }
         }

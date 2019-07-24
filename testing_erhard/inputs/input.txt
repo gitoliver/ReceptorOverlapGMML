@@ -1,5 +1,5 @@
 Snapshot directory:
-testing_erhard/snapshots_aligned
+testing_erhard/snapshots_aligned_1
 Template PDB:
 template.pdb
 Receptor PDB:
