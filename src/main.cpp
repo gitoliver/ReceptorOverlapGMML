@@ -17,12 +17,13 @@
 #include "../includes/bead_residues.h"
 
 //typedef std::vector<GeometryTopology::Coordinate> CoordinateVector;
-double GetAngleBetweenVectors(Eigen::Vector3d v1, Eigen::Vector3d v2);
+double GetAngleBetweenVectors(Eigen::Vector3d v1, Eigen::Vector3d v2, bool returnDegrees = false);
 Atom* FindCAAtomOfResidueWithNumber(ResidueVector residues, std::string query_residue_number);
 AssemblyVector loadPDBFilesFromDirectory(std::string directory);
 AssemblyVector loadPDBFilesFromDirectory(std::string directory, MolecularModeling::Assembly combined_assembly);
 MolecularModeling::Residue* seek_alycone_residue_connected_to_residue(MolecularModeling::Residue *residue, MolecularModeling::Assembly *assembly);
 MolecularModeling::Residue* recursively_seek_alycone_residue(MolecularModeling::Atom *start_atom, bool *found);
+double calculateInterStrepDistance(GeometryTopology::Coordinate *streptavidinCenterPoint, GeometryTopology::Coordinate *influenzaHAPoint1, GeometryTopology::Coordinate *influenzaHAPoint2);
 //GeometryTopology::Coordinate getGeometricCenterOfCoordinates(CoordinateVector coordinates);
 
 int main(int argc, char *argv[])
@@ -272,21 +273,28 @@ int main(int argc, char *argv[])
                                                  receptorVector3DAtom2->GetCoordinate()->GetY() - receptorVector3DAtom1->GetCoordinate()->GetY(),
                                                  receptorVector3DAtom2->GetCoordinate()->GetZ() - receptorVector3DAtom1->GetCoordinate()->GetZ());
                 if(reverse_strep_angle)
-                    angle = GetAngleBetweenVectors(strepVector3DReversed, receptorVector3D);
+                    angle = GetAngleBetweenVectors(strepVector3DReversed, receptorVector3D, true);
                 else
-                    angle = GetAngleBetweenVectors(strepVector3D, receptorVector3D);
+                    angle = GetAngleBetweenVectors(strepVector3D, receptorVector3D, true);
 
                 // CALCULATE DISTANCE
                 std::cout << "Angle: " << angle << ", ";
-                std::cout << "GlycanToStrepMidlineDistance: " << GeometryTopology::calculateDistanceFromPointToLineBetweenTwoPoints(target_residue_C1_atom->GetCoordinates().at(i), streptavidinDisectingLinepoint1, streptavidinDisectingLinepoint2) << ", ";
-                std::cout << "InterStrepDistance: " << receptorVector3DAtom2->GetDistanceToCoordinate(&streptavidinCenterPoint) << std::endl;
+                std::cout << "GlycanToStrepMidlineDistance: " << GeometryTopology::calculateDistanceFromPointToLineBetweenTwoPoints(target_residue_C1_atom->GetCoordinates().at(i), streptavidinDisectingLinepoint1, streptavidinDisectingLinepoint2) << "\n";
+           //     std::cout << "InterStrepDistance: " << receptorVector3DAtom2->GetDistanceToCoordinate(&streptavidinCenterPoint) << std::endl;
+
+
+                std::cout << "InterStrepDistance: " << calculateInterStrepDistance(&streptavidinCenterPoint, receptorVector3DAtom1->GetCoordinate(), receptorVector3DAtom2->GetCoordinate());
+
+
 
                 // Print out ATOM cards for testing in VMD
                 std::cout << std::fixed << std::setprecision(3);
                 std::cout << "ATOM      1 CA1  HA1     1    " << std::setw(8) << receptorVector3DAtom1->GetCoordinate()->GetX() << std::setw(8) << receptorVector3DAtom1->GetCoordinate()->GetY() << std::setw(8) << receptorVector3DAtom1->GetCoordinate()->GetZ() << "\n";
-                std::cout << "ATOM      2 CA2  HA2     2    " << std::setw(8) << receptorVector3DAtom2->GetCoordinate()->GetX() << std::setw(8) << receptorVector3DAtom2->GetCoordinate()->GetY() << std::setw(8) << receptorVector3DAtom2->GetCoordinate()->GetZ() << "\n";
-                std::cout << "ATOM      3 ST1  ST1     3    " << std::setw(8) << streptavidinDisectingLinepoint1.GetX() << std::setw(8) << streptavidinDisectingLinepoint1.GetY() << std::setw(8) << streptavidinDisectingLinepoint1.GetZ() << "\n";
-                std::cout << "ATOM      4 ST2  ST2     4    " << std::setw(8) << streptavidinDisectingLinepoint2.GetX() << std::setw(8) << streptavidinDisectingLinepoint2.GetY() << std::setw(8) << streptavidinDisectingLinepoint2.GetZ() << "\n";
+                std::cout << "ATOM      2 CA2  HA1     1    " << std::setw(8) << receptorVector3DAtom2->GetCoordinate()->GetX() << std::setw(8) << receptorVector3DAtom2->GetCoordinate()->GetY() << std::setw(8) << receptorVector3DAtom2->GetCoordinate()->GetZ() << "\n";
+                std::cout << "ATOM      3 ST1  ST1     2    " << std::setw(8) << streptavidinDisectingLinepoint1.GetX() << std::setw(8) << streptavidinDisectingLinepoint1.GetY() << std::setw(8) << streptavidinDisectingLinepoint1.GetZ() << "\n";
+                std::cout << "ATOM      4 ST2  ST1     2    " << std::setw(8) << streptavidinDisectingLinepoint2.GetX() << std::setw(8) << streptavidinDisectingLinepoint2.GetY() << std::setw(8) << streptavidinDisectingLinepoint2.GetZ() << "\n";
+              //  std::cout << "ATOM      6 CA3  HA1     1    " << std::setw(8) << steve.GetX() << std::setw(8) << steve.GetY() << std::setw(8) << steve.GetZ() << "\n";
+
             }
         }
         reverse_strep_angle = !reverse_strep_angle; // Flips the bool from true to false for every target residue.
@@ -337,10 +345,13 @@ int main(int argc, char *argv[])
 //    GeometryTopology::CoordinateVector
 //}
 
-double GetAngleBetweenVectors(Eigen::Vector3d v1, Eigen::Vector3d v2)
+double GetAngleBetweenVectors(Eigen::Vector3d v1, Eigen::Vector3d v2, bool returnDegrees)
 {
     // angle = arccos ( v1.v2 / ||v1||||V2||) // "." is dot product. "||" is magnitude. norm() function gives magnitude
-    return ( (acos( v1.dot(v2) / (v1.norm() * v2.norm()))) * (180 / gmml::PI_RADIAN)); // calculate angle, then convert to degrees
+    if(returnDegrees)
+        return ( (acos( v1.dot(v2) / (v1.norm() * v2.norm()))) * (180 / gmml::PI_RADIAN)); // calculate angle, then convert to degrees
+    else
+        return acos( v1.dot(v2) / (v1.norm() * v2.norm()));
 }
 
 Atom* FindCAAtomOfResidueWithNumber(ResidueVector residues, std::string query_residue_number)
@@ -466,6 +477,54 @@ MolecularModeling::Residue* recursively_seek_alycone_residue(MolecularModeling::
     return aglycone;
 }
 
+double calculateInterStrepDistance(GeometryTopology::Coordinate *streptavidinCenterPoint, GeometryTopology::Coordinate *influenzaHAPoint1, GeometryTopology::Coordinate *influenzaHAPoint2)
+{
+    /* HA1 and HA2 are coordinates in the center of the influenza HA tail and headgroup respectively.
+ * ST3 is a coordinate at the center of the strep molecule.
+ * Coordinates that start with a ? are ones that I want to calculate.
+ * Once the HA is aligned to Strep via the above code, you can imagine an ST3mirror (ST3m) coordinate, that is a 120 degree rotation from ST3.
+ * Why 120? The three HA binding sites are symetrically positioned around the HA headgroup, 120 degrees apart.
+ * The purpose of the following code is to calculate the distance between the ST3m and ST3 (aka Interstrep Strep distance on surface required for binding like this).
+ * HA3 is a coordinate that is in line with the HA1->HA2 vector and in the same plane as ST3 and ST3m, such that ST3-HA3-ST3m forms a 120 degree angle and an isoceles triangle.
+ * I first calculate the position of HA3:
+ * I get the HA2-ST3 distance. The HA1-HA2-ST3 angle, and calculate HA2-HA3 from that, as HA2-HA3-ST3 angle is 90. Math yo.
+ * I then calculate HA3 position using the normalized HA1-HA2 vector and the HA2-HA3 distance.
+ * To calculate ST3m - ST3 distance, I use the HA3 coordinate and the fact that it is an isoceles triangle with a ST3-HA3-ST3m angle of 120. I can calculate HA3-ST3 distance too.
+ *
+ *                 ?ST3mirror
+ *
+ *  HA1--------HA2 ?HA3
+ *
+ *                  ST3 // Streptavidin center point
+ *
+ */
+    Eigen::Vector3d influenzaHAVector3D(influenzaHAPoint2->GetX() - influenzaHAPoint1->GetX(),
+                                        influenzaHAPoint2->GetY() - influenzaHAPoint1->GetY(),
+                                        influenzaHAPoint2->GetZ() - influenzaHAPoint1->GetZ());
 
+    Eigen::Vector3d ha2ToStrepCenter(streptavidinCenterPoint->GetX() - influenzaHAPoint2->GetX(),
+                                     streptavidinCenterPoint->GetY() - influenzaHAPoint2->GetY(),
+                                     streptavidinCenterPoint->GetZ() - influenzaHAPoint2->GetZ());
+
+    double angleHA2StrepCenter = GetAngleBetweenVectors(influenzaHAVector3D, ha2ToStrepCenter);
+    std::cout << "Outer HA1 HA2 StrepCenter Angle: " << GetAngleBetweenVectors(influenzaHAVector3D, ha2ToStrepCenter, true) << "\n";
+
+    double hyp1 = influenzaHAPoint2->Distance(streptavidinCenterPoint);
+    std::cout << "Cos result of " << GetAngleBetweenVectors(influenzaHAVector3D, ha2ToStrepCenter, true) << " is " << cos(angleHA2StrepCenter) << "\n";
+    double adj1 = hyp1 * cos(angleHA2StrepCenter);
+    std::cout << "adj1: " << adj1 << " based on hyp of " << hyp1 << "\n";
+
+    double lengthRatio = ( (adj1 + influenzaHAVector3D.norm()) / influenzaHAVector3D.norm());
+    GeometryTopology::Coordinate ha3(((1-lengthRatio) * influenzaHAPoint1->GetX()) + lengthRatio * influenzaHAPoint2->GetX(),
+                                        ((1-lengthRatio) * influenzaHAPoint1->GetY()) + lengthRatio * influenzaHAPoint2->GetY(),
+                                        ((1-lengthRatio) * influenzaHAPoint1->GetZ()) + lengthRatio * influenzaHAPoint2->GetZ());
+
+    double hyp2 = ha3.Distance(streptavidinCenterPoint);
+    double opp2 = hyp2 * sin(1.0472); // Cos of 60 degrees.
+    std::cout << "Distance between Strep Centers if finally: " << (opp2 * 2) << ". Based on hyp2: " << hyp2 << "\n";
+    std::cout << "ATOM      6 CA4  HA1     1    " << std::setw(8) << ha3.GetX() << std::setw(8) << ha3.GetY() << std::setw(8) << ha3.GetZ() << "\n";
+    return (opp2 * 2);
+
+}
 
 
